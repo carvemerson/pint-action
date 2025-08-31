@@ -22,6 +22,10 @@ inputs:
     description: 'Extra options for composer install (e.g., --no-scripts)'
     required: false
     default: ''
+  continue-on-error:
+    description: 'Whether to continue on error'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -47,6 +51,7 @@ runs:
 
     - name: Cache Pint cache file
       uses: actions/cache@v4
+      continue-on-error: ${{ inputs.continue-on-error }}
       with:
         path: ${{ inputs.working-directory }}/.pint.cache
         key: ${{ runner.os }}-pint-${{ hashFiles(format('{0}/pint.json', inputs.working-directory), format('{0}/composer.lock', inputs.working-directory)) }}
