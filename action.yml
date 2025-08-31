@@ -1,65 +1,65 @@
-name: Run Pint
-on:
-  workflow_call:
-    inputs:
-      php-version:
-        type: string
-        default: '8.3'
-        description: 'PHP version used to run Pint'
-      working-directory:
-        type: string
-        default: '.'
-        description: 'Directory containing composer.json and Pint config'
-      pint-args:
-        type: string
-        default: '--test --ansi'
-        description: 'Extra arguments passed to Pint (e.g., --dirty)'
-      composer-options:
-        type: string
-        default: ''
-        description: 'Extra options for composer install (e.g., --no-scripts)'
-permissions:
-  contents: read
 
-jobs:
-  pint:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
+name: 'Run Laravel Pint'
+description: 'Run Laravel Pint code style fixer with caching and flexible configuration'
+author: 'Your Name'
+branding:
+  icon: 'check-circle'
+  color: 'red'
+
+inputs:
+  php-version:
+    description: 'PHP version used to run Pint'
+    required: false
+    default: '8.3'
+  working-directory:
+    description: 'Directory containing composer.json and Pint config'
+    required: false
+    default: '.'
+  pint-args:
+    description: 'Extra arguments passed to Pint (e.g., --dirty)'
+    required: false
+    default: '--test --ansi'
+  composer-options:
+    description: 'Extra options for composer install (e.g., --no-scripts)'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        tools: composer:v2
+        coverage: none
+        ini-values: memory_limit=-1
+
+    - name: Install Composer dependencies (with cache)
+      uses: ramsey/composer-install@v3
+      with:
         working-directory: ${{ inputs.working-directory }}
+        composer-options: ${{ inputs.composer-options }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
+    - name: Cache Pint cache file
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.working-directory }}/.pint.cache
+        key: ${{ runner.os }}-pint-${{ hashFiles(format('{0}/pint.json', inputs.working-directory), format('{0}/composer.lock', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-pint-
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ inputs.php-version }}
-          tools: composer:v2
-          coverage: none
-          ini-values: memory_limit=-1
+    - name: Show Pint version
+      run: vendor/bin/pint --version
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
 
-      # Fast, reliable composer install with built-in caching
-      - name: Install Composer dependencies (with cache)
-        uses: ramsey/composer-install@v3
-        with:
-          working-directory: ${{ inputs.working-directory }}
-          composer-options: ${{ inputs.composer-options }}
-
-      # Cache Pint’s fix state to speed up repeat runs
-      - name: Cache Pint cache file
-        uses: actions/cache@v4
-        with:
-          path: ${{ inputs.working-directory }}/.pint.cache
-          key: ${{ runner.os }}-pint-${{ hashFiles(format('{0}/pint.json', inputs.working-directory), format('{0}/composer.lock', inputs.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-pint-
-
-      - name: Show Pint version
-        run: vendor/bin/pint --version
-
-      - name: Run Pint (check mode)
-        run: vendor/bin/pint ${{ inputs.pint-args }}
+    - name: Run Pint (check mode)
+      run: vendor/bin/pint ${{ inputs.pint-args }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
