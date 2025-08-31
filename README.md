@@ -117,7 +117,3 @@ Pin to a specific version/tag to ensure stability, for example:
 ```yaml
 uses: carvemerson/pint-action@v1
 ```
-
-## License
-
-This action is provided as-is. If your repository has a LICENSE file, it applies to this action as well.
