@@ -1,9 +1,6 @@
 name: 'Run Laravel Pint'
 description: 'Run Laravel Pint code style fixer with caching and flexible configuration'
 author: 'Emerson Carvalho'
-branding:
-  icon: 'check-circle'
-  color: 'red'
 
 inputs:
   php-version:
